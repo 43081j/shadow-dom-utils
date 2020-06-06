@@ -3,8 +3,16 @@
     "eslint:recommended",
     "google",
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsdoc/recommended"
   ],
+  "settings": {
+    "jsdoc": {
+      "tagNamePreference": {
+        "returns": "return"
+      }
+    }
+  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2018,
@@ -12,6 +20,8 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
+    "valid-jsdoc": "off",
+    "require-jsdoc": "off",
     "indent": "off",
     "quote-props": "off",
     "max-len": "error",
@@ -30,6 +40,9 @@
     "@typescript-eslint/no-array-constructor": "error",
     "@typescript-eslint/no-empty-interface": "error",
     "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-parameter-properties": "error"
+    "@typescript-eslint/no-parameter-properties": "error",
+    "jsdoc/no-types": "error",
+    "jsdoc/require-param-type": "off",
+    "jsdoc/require-returns-type": "off"
   }
 }
