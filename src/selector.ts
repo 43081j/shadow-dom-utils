@@ -1,3 +1,5 @@
+import csstree = require('css-tree');
+
 /**
  * Determines if a given node is an element or not.
  *
@@ -60,14 +62,20 @@ function* getShadowRoots(
   return;
 }
 
+export interface QuerySelectorOptions {
+  crossBoundary: boolean;
+}
+
 function querySelector<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
-  subject?: Node & ParentNode
+  subject?: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
 ): HTMLElementTagNameMap[K] | null;
 
 function querySelector<K extends keyof SVGElementTagNameMap>(
   selectors: K,
-  subject?: Node & ParentNode
+  subject?: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
 ): SVGElementTagNameMap[K] | null;
 
 /**
@@ -76,16 +84,26 @@ function querySelector<K extends keyof SVGElementTagNameMap>(
  *
  * @param selectors CSS selector to query for
  * @param [subject] Subject to query relative to, defauling to `document`
+ * @param [options] Options for fine-tuning querying
  * @return First matching element found
  */
 function querySelector<E extends Element = Element>(
   selectors: string,
-  subject: Node & ParentNode = document
+  subject: Node & ParentNode = document,
+  options?: Partial<QuerySelectorOptions>
 ): E | null {
   const immediateChild = subject.querySelector<E>(selectors);
 
   if (immediateChild) {
     return immediateChild;
+  }
+
+  if (options?.crossBoundary) {
+    const parsedSelector = csstree.parse(selectors, {
+      context: 'selector'
+    });
+
+    console.log(parsedSelector); // eslint-disable-line
   }
 
   for (const root of getShadowRoots(subject)) {
@@ -100,12 +118,14 @@ function querySelector<E extends Element = Element>(
 
 function querySelectorAll<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
-  subject?: Node & ParentNode
+  subject?: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
 ): Array<HTMLElementTagNameMap[K]>;
 
 function querySelectorAll<K extends keyof SVGElementTagNameMap>(
   selectors: K,
-  subject?: Node & ParentNode
+  subject?: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
 ): Array<SVGElementTagNameMap[K]>;
 
 /**
@@ -114,11 +134,13 @@ function querySelectorAll<K extends keyof SVGElementTagNameMap>(
  *
  * @param selectors CSS selector to query for
  * @param [subject] Subject to query relative to, defaulting to `document`
+ * @param [options] Options for fine-tuning querying
  * @return Set of matching elements found
  */
 function querySelectorAll<E extends Element = Element>(
   selectors: string,
-  subject: Node & ParentNode = document
+  subject: Node & ParentNode = document,
+  _options?: Partial<QuerySelectorOptions>
 ): E[] {
   const results: E[] = [...subject.querySelectorAll<E>(selectors)];
 
