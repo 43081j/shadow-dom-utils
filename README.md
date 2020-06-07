@@ -1,5 +1,11 @@
 ## shadow-utils
 
+### WIP
+
+This is a work-in-progress, it has not yet been published under any
+sensible name and nobody knows what it does or if it works. Future me
+will find out, I'm sure.
+
 This package provides a set of useful utilities for dealing with shadow DOM,
 primarily for test environment situations where one might want to break
 encapsulation.
