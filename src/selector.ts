@@ -1,5 +1,3 @@
-import csstree = require('css-tree');
-
 /**
  * Determines if a given node is an element or not.
  *
@@ -11,26 +9,86 @@ function isElement(node: Node): node is Element {
 }
 
 /**
+ * Determines if a given node is a document or not.
+ *
+ * @param node Node to test
+ * @return bool indicating whether the node is document
+ */
+function isDocument(node: Node): node is Document {
+  return node.nodeType === Node.DOCUMENT_NODE;
+}
+
+/**
+ * Computes a set of cross-boundary selector representations for
+ * a given selector.
+ *
+ * @param sel Selector to parse
+ * @return representation of descendant selectors for cross-boundary
+ * processing.
+ */
+async function computeCrossBoundarySelectors(
+  sel: string
+): Promise<Array<string[]>> {
+  const parser = await import('postcss-selector-parser');
+  const results: Array<string[]> = [];
+  const processor = parser();
+  const parsedSelectors = processor.astSync(sel);
+
+  for (const node of parsedSelectors.nodes) {
+    let accum = '';
+    const nodeResults: string[] = [];
+
+    if (node.type === 'selector') {
+      for (const child of node.nodes) {
+        if (child.type === 'combinator' && child.value === ' ') {
+          nodeResults.push(accum);
+          accum = '';
+        } else {
+          accum += child.toString();
+        }
+      }
+
+      nodeResults.push(accum);
+      results.push(nodeResults);
+    }
+  }
+
+  return results;
+}
+
+/*
+ * .foo .bar
+ * [.foo, .bar]
+ *
+ * .foo > .bar .baz
+ * [.foo > .bar, .baz]
+ */
+
+/**
  * Traverses a given node in order to find all available shadow roots
  * contained within child elements.
  *
  * @param node Node to traverse from
+ * @param deep Whether to traverse recursively into shadow roots or not
  */
 function* getShadowRoots(
-  node: Node
+  node: Node,
+  deep?: boolean
 ): Generator<DocumentFragment, void, undefined> {
-  if (!isElement(node)) {
+  if (!isElement(node) && !isDocument(node)) {
     return;
   }
 
-  const doc = node.getRootNode({composed: true}) as Document;
+  const doc = isDocument(node)
+    ? node
+    : (node.getRootNode({composed: true}) as Document);
 
-  if (node.shadowRoot) {
+  if (isElement(node) && node.shadowRoot) {
     yield node.shadowRoot;
   }
 
-  const toWalk: Element[] = [node];
-  let currentNode: Element | undefined = undefined;
+  const toWalk: Node[] = [node];
+  let currentNode: Node | undefined = undefined;
 
   while ((currentNode = toWalk.pop())) {
     const walker = doc.createTreeWalker(
@@ -53,6 +111,9 @@ function* getShadowRoots(
 
     while (walkerNode) {
       if (isElement(walkerNode) && walkerNode.shadowRoot) {
+        if (deep) {
+          toWalk.push(walkerNode.shadowRoot);
+        }
         yield walkerNode.shadowRoot;
       }
       walkerNode = walker.nextNode();
@@ -60,6 +121,107 @@ function* getShadowRoots(
   }
 
   return;
+}
+
+/**
+ * Returns the host element of this node
+ * @param node Node to retrieve host for
+ */
+function getParentHost(node: Node): Element | null {
+  const root = node.getRootNode();
+  const rootAsShadow = root as ShadowRoot;
+  if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE && rootAsShadow.host) {
+    return rootAsShadow.host;
+  }
+  return null;
+}
+
+/**
+ * Asserts that the parents of the given node satisfy the chain of
+ * selectors.
+ * @param node Node to test
+ * @param chain Selectors to assert for
+ */
+function parentsSatisfyChain(node: Element, chain: string[]): boolean {
+  let selector;
+  let currentNode = node;
+
+  while ((selector = chain.pop())) {
+    const immediate = currentNode.closest(selector);
+
+    if (immediate) {
+      currentNode = immediate;
+    } else {
+      let parentHost;
+      let nextNode;
+      let currentHostChild = currentNode;
+
+      while ((parentHost = getParentHost(currentHostChild))) {
+        if (parentHost.matches(selector)) {
+          nextNode = parentHost;
+          break;
+        }
+
+        const child = parentHost.closest(selector);
+
+        if (child) {
+          nextNode = child;
+          break;
+        }
+
+        currentHostChild = parentHost;
+      }
+
+      if (nextNode) {
+        currentNode = nextNode;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Attempts to find an element across shadow boundaries
+ * by the given selector.
+ *
+ * @param selector Selector to query for
+ * @return element found
+ */
+async function queryCrossBoundary<E extends Element>(
+  selector: string,
+  subject: Node & ParentNode = document
+): Promise<E | null> {
+  const computed = await computeCrossBoundarySelectors(selector);
+  const immediateChild = subject.querySelector<E>(selector);
+
+  if (immediateChild) {
+    return immediateChild;
+  }
+
+  const shadowRoots = [...getShadowRoots(subject, true)];
+
+  for (const chain of computed) {
+    const deepestPart = chain[chain.length - 1];
+
+    for (const root of shadowRoots) {
+      const children = root.querySelectorAll<E>(deepestPart);
+
+      for (const child of children) {
+        if (chain.length === 1) {
+          return child;
+        }
+
+        if (parentsSatisfyChain(child, chain.slice(0, -1))) {
+          return child;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 export interface QuerySelectorOptions {
@@ -70,13 +232,13 @@ function querySelector<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
-): HTMLElementTagNameMap[K] | null;
+): Promise<HTMLElementTagNameMap[K] | null>;
 
 function querySelector<K extends keyof SVGElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
-): SVGElementTagNameMap[K] | null;
+): Promise<SVGElementTagNameMap[K] | null>;
 
 /**
  * Queries the DOM for a matching element from a given node, traversing
@@ -87,11 +249,11 @@ function querySelector<K extends keyof SVGElementTagNameMap>(
  * @param [options] Options for fine-tuning querying
  * @return First matching element found
  */
-function querySelector<E extends Element = Element>(
+async function querySelector<E extends Element = Element>(
   selectors: string,
   subject: Node & ParentNode = document,
   options?: Partial<QuerySelectorOptions>
-): E | null {
+): Promise<E | null> {
   const immediateChild = subject.querySelector<E>(selectors);
 
   if (immediateChild) {
@@ -99,14 +261,16 @@ function querySelector<E extends Element = Element>(
   }
 
   if (options?.crossBoundary) {
-    const parsedSelector = csstree.parse(selectors, {
-      context: 'selector'
-    });
+    const child = await queryCrossBoundary<E>(selectors);
 
-    console.log(parsedSelector); // eslint-disable-line
+    if (child) {
+      return child;
+    }
+
+    return null;
   }
 
-  for (const root of getShadowRoots(subject)) {
+  for (const root of getShadowRoots(subject, true)) {
     const child = root.querySelector<E>(selectors);
     if (child) {
       return child;
@@ -151,7 +315,4 @@ function querySelectorAll<E extends Element = Element>(
   return results;
 }
 
-export {
-  querySelector,
-  querySelectorAll
-};
+export {querySelector, querySelectorAll};
