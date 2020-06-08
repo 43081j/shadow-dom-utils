@@ -3,11 +3,12 @@
   "version": "0.0.1",
   "description": "A utility for querying beyond shadow boundaries",
   "main": "lib/selector.js",
+  "module": "dist/selector.js",
   "files": [
     "lib/!(test)"
   ],
   "scripts": {
-    "clean": "rimraf ./lib",
+    "clean": "rimraf ./lib ./dist",
     "lint": "eslint \"src/**/*.ts\"",
     "prebuild": "npm run clean",
     "build": "tsc",
