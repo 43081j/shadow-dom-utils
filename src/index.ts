@@ -19,6 +19,28 @@ export function isDocument(node: Node): node is Document {
 }
 
 /**
+ * Retrieves the host element of a given node, whether it be a
+ * shadow root host or a document.
+ *
+ * @param node Node to retrieve host for
+ * @return host element or document
+ */
+export function getHost(node: Node): Document | Element | null {
+  const root = node.getRootNode();
+
+  if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    const rootAsShadow = root as ShadowRoot;
+    return rootAsShadow?.host ?? null;
+  }
+
+  if (root.nodeType === Node.DOCUMENT_NODE) {
+    return root as Document;
+  }
+
+  return null;
+}
+
+/**
  * Computes a set of cross-boundary selector representations for
  * a given selector.
  *
