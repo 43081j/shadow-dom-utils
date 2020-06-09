@@ -1,7 +1,7 @@
 {
-  "name": "@43081j/shadow-query",
+  "name": "@43081j/shadow-utils",
   "version": "0.0.1",
-  "description": "A utility for querying beyond shadow boundaries",
+  "description": "A set of utilities for dealing with shadow DOM.",
   "main": "lib/index.js",
   "module": "dist/index.js",
   "files": [
