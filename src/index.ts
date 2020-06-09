@@ -125,7 +125,9 @@ function* getShadowRoots(
 
 /**
  * Returns the host element of this node
+ *
  * @param node Node to retrieve host for
+ * @return host element
  */
 function getParentHost(node: Node): Element | null {
   const root = node.getRootNode();
@@ -139,8 +141,10 @@ function getParentHost(node: Node): Element | null {
 /**
  * Asserts that the parents of the given node satisfy the chain of
  * selectors.
+ *
  * @param node Node to test
  * @param chain Selectors to assert for
+ * @return whether the parents satisfied the chain or not
  */
 function parentsSatisfyChain(node: Element, chain: string[]): boolean {
   let selector;
@@ -188,6 +192,7 @@ function parentsSatisfyChain(node: Element, chain: string[]): boolean {
  * by the given selector.
  *
  * @param selector Selector to query for
+ * @param [subject] Subject to query relative to
  * @return element found
  */
 async function queryCrossBoundary<E extends Element>(
@@ -298,7 +303,7 @@ function querySelectorAll<K extends keyof SVGElementTagNameMap>(
  *
  * @param selectors CSS selector to query for
  * @param [subject] Subject to query relative to, defaulting to `document`
- * @param [options] Options for fine-tuning querying
+ * @param [_options] Options for fine-tuning querying
  * @return Set of matching elements found
  */
 function querySelectorAll<E extends Element = Element>(

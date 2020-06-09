@@ -58,9 +58,7 @@ describe('shadow-utils', () => {
 
     for (const [selector, expected] of Object.entries(testCases)) {
       it(`should compute chain for ${selector}`, async () => {
-        const result = await util.computeCrossBoundarySelectors(
-          selector
-        );
+        const result = await util.computeCrossBoundarySelectors(selector);
 
         expect(result).to.deep.equal(expected);
       });

@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "module": "dist/index.js",
   "files": [
-    "lib/!(test)"
+    "lib/!(test)",
+    "dist/!(test.js)"
   ],
   "scripts": {
     "clean": "rimraf ./lib ./dist",
