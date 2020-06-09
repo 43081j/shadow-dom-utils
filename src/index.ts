@@ -4,7 +4,7 @@
  * @param node Node to test
  * @return bool indicating whether the node is an element
  */
-function isElement(node: Node): node is Element {
+export function isElement(node: Node): node is Element {
   return node.nodeType === Node.ELEMENT_NODE;
 }
 
@@ -14,7 +14,7 @@ function isElement(node: Node): node is Element {
  * @param node Node to test
  * @return bool indicating whether the node is document
  */
-function isDocument(node: Node): node is Document {
+export function isDocument(node: Node): node is Document {
   return node.nodeType === Node.DOCUMENT_NODE;
 }
 
@@ -26,7 +26,7 @@ function isDocument(node: Node): node is Document {
  * @return representation of descendant selectors for cross-boundary
  * processing.
  */
-async function computeCrossBoundarySelectors(
+export async function computeCrossBoundarySelectors(
   sel: string
 ): Promise<Array<string[]>> {
   const parser = await import('postcss-selector-parser');
