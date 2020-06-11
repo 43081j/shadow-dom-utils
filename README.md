@@ -27,3 +27,18 @@ querySelector('.foo');
 // find all elements with the class "foo" within a specific node
 querySelector('.foo', node);
 ```
+
+### `getHost`
+
+Retrieves the host document or element of a given node.
+
+This behaves similar to calling `getRootNode()` manually, but will only
+return a result if it is a document or a shadow-root host, meaning
+disconnected nodes will return `null`.
+
+Usage:
+
+```ts
+// get the host of a given node
+getHost(node);
+```

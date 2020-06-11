@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable"],
     "target": "es2017",
-    "module": "esnext",
+    "module": "commonjs",
     "declaration": true,
     "outDir": "./lib",
     "strict": true,
