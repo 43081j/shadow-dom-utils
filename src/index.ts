@@ -255,17 +255,23 @@ export interface QuerySelectorOptions {
   crossBoundary: boolean;
 }
 
-function querySelector<K extends keyof HTMLElementTagNameMap>(
+export function querySelector<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
 ): Promise<HTMLElementTagNameMap[K] | null>;
 
-function querySelector<K extends keyof SVGElementTagNameMap>(
+export function querySelector<K extends keyof SVGElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
 ): Promise<SVGElementTagNameMap[K] | null>;
+
+export function querySelector<E extends Element = Element>(
+  selectors: string,
+  subject: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
+): Promise<E | null>;
 
 /**
  * Queries the DOM for a matching element from a given node, traversing
@@ -276,19 +282,19 @@ function querySelector<K extends keyof SVGElementTagNameMap>(
  * @param [options] Options for fine-tuning querying
  * @return First matching element found
  */
-async function querySelector<E extends Element = Element>(
+export async function querySelector(
   selectors: string,
   subject: Node & ParentNode = document,
   options?: Partial<QuerySelectorOptions>
-): Promise<E | null> {
-  const immediateChild = subject.querySelector<E>(selectors);
+): Promise<Element | null> {
+  const immediateChild = subject.querySelector(selectors);
 
   if (immediateChild) {
     return immediateChild;
   }
 
   if (options?.crossBoundary) {
-    const child = await queryCrossBoundary<E>(selectors);
+    const child = await queryCrossBoundary(selectors);
 
     if (child) {
       return child;
@@ -298,7 +304,7 @@ async function querySelector<E extends Element = Element>(
   }
 
   for (const root of getShadowRoots(subject, true)) {
-    const child = root.querySelector<E>(selectors);
+    const child = root.querySelector(selectors);
     if (child) {
       return child;
     }
@@ -307,17 +313,23 @@ async function querySelector<E extends Element = Element>(
   return null;
 }
 
-function querySelectorAll<K extends keyof HTMLElementTagNameMap>(
+export function querySelectorAll<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
 ): Array<HTMLElementTagNameMap[K]>;
 
-function querySelectorAll<K extends keyof SVGElementTagNameMap>(
+export function querySelectorAll<K extends keyof SVGElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
 ): Array<SVGElementTagNameMap[K]>;
+
+export function querySelectorAll<E extends Element = Element>(
+  selectors: string,
+  subject: Node & ParentNode,
+  _options?: Partial<QuerySelectorOptions>
+): E[];
 
 /**
  * Queries the DOM for all matching elements from a given node, traversing
@@ -328,18 +340,16 @@ function querySelectorAll<K extends keyof SVGElementTagNameMap>(
  * @param [_options] Options for fine-tuning querying
  * @return Set of matching elements found
  */
-function querySelectorAll<E extends Element = Element>(
+export function querySelectorAll(
   selectors: string,
   subject: Node & ParentNode = document,
   _options?: Partial<QuerySelectorOptions>
-): E[] {
-  const results: E[] = [...subject.querySelectorAll<E>(selectors)];
+): Element[] {
+  const results: Element[] = [...subject.querySelectorAll(selectors)];
 
   for (const root of getShadowRoots(subject)) {
-    results.push(...root.querySelectorAll<E>(selectors));
+    results.push(...root.querySelectorAll(selectors));
   }
 
   return results;
 }
-
-export {querySelector, querySelectorAll};
