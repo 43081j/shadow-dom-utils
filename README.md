@@ -18,11 +18,20 @@ querySelector('.foo');
 
 // find all elements with the class "foo" within a specific node
 querySelector('.foo', node);
+
+// pass an options object
+querySelector('.foo', node, options);
 ```
 
 #### Options
 
-Both of these functions can take an options object which is structured like so:
+Both of these functions can take an options object like so:
+
+```ts
+querySelector('.foo', document, options);
+```
+
+The following options are supported:
 
 ```ts
 {
