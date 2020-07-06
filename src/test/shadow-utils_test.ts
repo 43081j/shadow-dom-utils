@@ -1,6 +1,35 @@
 import {expect} from 'chai';
 import * as util from '../index';
 
+customElements.define('level-one', class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({mode: 'open'});
+  }
+
+  connectedCallback() {
+    const child0 = document.createElement('level-two');
+    const child1 = document.createElement('p');
+    child1.className = 'level-one-p';
+    child1.innerText = 'I am level 1';
+    this.shadowRoot!.appendChild(child0);
+    this.shadowRoot!.appendChild(child1);
+  }
+});
+customElements.define('level-two', class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({mode: 'open'});
+  }
+
+  connectedCallback() {
+    const child0 = document.createElement('p');
+    child0.className = 'level-two-p';
+    child0.innerText = 'I am level 2';
+    this.shadowRoot!.appendChild(child0);
+  }
+});
+
 describe('shadow-utils', () => {
   describe('isElement', () => {
     it('should be true when node is an element', () => {
@@ -63,5 +92,41 @@ describe('shadow-utils', () => {
         expect(result).to.deep.equal(expected);
       });
     }
+  });
+
+  describe('querySelector', () => {
+    let node: HTMLElement;
+
+    beforeEach(() => {
+      node = document.createElement('level-one');
+      document.body.appendChild(node);
+    });
+
+    afterEach(() => {
+      node.remove();
+    });
+
+    it('should find same-root nodes', async () => {
+      const result = await util.querySelector('level-one');
+      expect(result).to.equal(node);
+    });
+
+    it('should find nodes across shadow boundaries', async () => {
+      const result = await util.querySelector('level-two');
+      const child = node.shadowRoot!.querySelector('level-two');
+      expect(result).to.equal(child);
+    });
+
+    it('should not match cross-boundary selectors by default', async () => {
+      const result = await util.querySelector('level-one level-two');
+      expect(result).to.equal(null);
+    });
+
+    it('should match cross-boundary selectors when enabled', async () => {
+      const result = await util.querySelector('level-one level-two', document,
+          {crossBoundary: true});
+      const child = node.shadowRoot!.querySelector('level-two');
+      expect(result).to.equal(child);
+    });
   });
 });

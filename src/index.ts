@@ -269,7 +269,7 @@ export function querySelector<K extends keyof SVGElementTagNameMap>(
 
 export function querySelector<E extends Element = Element>(
   selectors: string,
-  subject: Node & ParentNode,
+  subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
 ): Promise<E | null>;
 
