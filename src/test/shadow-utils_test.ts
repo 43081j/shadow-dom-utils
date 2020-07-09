@@ -2,12 +2,12 @@ import {expect} from 'chai';
 import * as util from '../index';
 
 customElements.define('level-one', class extends HTMLElement {
-  constructor() {
+  public constructor() {
     super();
     this.attachShadow({mode: 'open'});
   }
 
-  connectedCallback() {
+  public connectedCallback(): void {
     const child0 = document.createElement('level-two');
     const child1 = document.createElement('p');
     child1.className = 'level-one-p';
@@ -16,13 +16,14 @@ customElements.define('level-one', class extends HTMLElement {
     this.shadowRoot!.appendChild(child1);
   }
 });
+
 customElements.define('level-two', class extends HTMLElement {
-  constructor() {
+  public constructor() {
     super();
     this.attachShadow({mode: 'open'});
   }
 
-  connectedCallback() {
+  public connectedCallback(): void {
     const child0 = document.createElement('p');
     child0.className = 'level-two-p';
     child0.innerText = 'I am level 2';
