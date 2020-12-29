@@ -1,6 +1,6 @@
 {
   "name": "shadow-dom-utils",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A set of utilities for dealing with shadow DOM.",
   "main": "lib/index.js",
   "module": "dist/index.js",
