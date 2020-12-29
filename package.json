@@ -1,5 +1,5 @@
 {
-  "name": "@43081j/shadow-utils",
+  "name": "shadow-dom-utils",
   "version": "0.1.2",
   "description": "A set of utilities for dealing with shadow DOM.",
   "main": "lib/index.js",
@@ -20,14 +20,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/43081j/shadow-query.git"
+    "url": "git+https://github.com/43081j/shadow-dom-utils.git"
   },
   "author": "James Garbutt (https://github.com/43081j)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/43081j/shadow-query/issues"
+    "url": "https://github.com/43081j/shadow-dom-utils/issues"
   },
-  "homepage": "https://github.com/43081j/shadow-query#readme",
+  "homepage": "https://github.com/43081j/shadow-dom-utils#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.0.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
