@@ -1,4 +1,4 @@
-## shadow-utils
+## shadow-dom-utils
 
 This package provides a set of useful utilities for dealing with shadow DOM,
 primarily for test environment situations where one might want to break
