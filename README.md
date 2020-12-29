@@ -4,6 +4,12 @@ This package provides a set of useful utilities for dealing with shadow DOM,
 primarily for test environment situations where one might want to break
 encapsulation.
 
+### Install
+
+```bash
+npm i shadow-dom-utils
+```
+
 ### `querySelector` and `querySelectorAll`
 
 Behaves in a similar way to the native `querySelector` but ignores shadow
