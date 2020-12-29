@@ -16,9 +16,10 @@
     "clean": "rimraf ./lib ./dist",
     "lint": "eslint \"src/**/*.ts\"",
     "prebuild": "npm run clean",
-    "build:esm": "esbuild --outfile=dist/index.js --format=esm src/index.ts",
+    "build:esm": "esbuild --bundle --outfile=dist/index.js --format=esm src/index.ts",
+    "build:test": "esbuild --bundle --outfile=dist/test.js --format=esm src/test/index.ts",
     "build": "tsc && npm run build:esm",
-    "test": "karma start --single-run",
+    "test": "npm run build:test && karma start --single-run",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build",
     "prepublishOnly": "npm run lint && npm run test"
@@ -53,6 +54,6 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "postcss-selector-parser": "^6.0.2"
+    "postcss-selector-parser": "^6.0.4"
   }
 }

@@ -1,3 +1,5 @@
+import parser = require('postcss-selector-parser');
+
 /**
  * Determines if a given node is an element or not.
  *
@@ -51,7 +53,6 @@ export function getHost(node: Node): Document | Element | null {
 export async function computeCrossBoundarySelectors(
   sel: string
 ): Promise<Array<string[]>> {
-  const parser = await import('postcss-selector-parser');
   const results: Array<string[]> = [];
   const processor = parser();
   const parsedSelectors = processor.astSync(sel);
