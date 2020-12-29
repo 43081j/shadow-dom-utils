@@ -2,8 +2,12 @@
   "name": "shadow-dom-utils",
   "version": "0.2.0",
   "description": "A set of utilities for dealing with shadow DOM.",
-  "main": "lib/index.js",
-  "module": "dist/index.js",
+  "main": "./lib/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    "import": "./dist/index.js",
+    "default": "./lib/index.js"
+  },
   "files": [
     "lib/!(test)",
     "dist/!(test.js)"
@@ -12,7 +16,8 @@
     "clean": "rimraf ./lib ./dist",
     "lint": "eslint \"src/**/*.ts\"",
     "prebuild": "npm run clean",
-    "build": "tsc && rollup -c",
+    "build:esm": "esbuild --outfile=dist/index.js --format=esm src/index.ts",
+    "build": "tsc && npm run build:esm",
     "test": "karma start --single-run",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run build",
@@ -29,13 +34,12 @@
   },
   "homepage": "https://github.com/43081j/shadow-dom-utils#readme",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.0.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
     "@types/chai": "^4.2.12",
     "@types/mocha": "^8.0.3",
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
     "chai": "^4.2.0",
+    "esbuild": "^0.8.27",
     "eslint": "^7.8.1",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^30.3.1",
@@ -46,8 +50,6 @@
     "prettier": "^2.1.1",
     "puppeteer": "^5.2.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.26.9",
-    "rollup-plugin-external-globals": "^0.6.0",
     "typescript": "^4.0.2"
   },
   "dependencies": {
