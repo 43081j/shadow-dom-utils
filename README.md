@@ -1,64 +1,131 @@
-## shadow-dom-utils
+# shadow-dom-utils
 
 This package provides a set of useful utilities for dealing with shadow DOM,
 primarily for test environment situations where one might want to break
 encapsulation.
 
-### Install
+## Install
 
 ```bash
 npm i shadow-dom-utils
 ```
 
-### `querySelector` and `querySelectorAll`
+## Usage
 
-Behaves in a similar way to the native `querySelector` but ignores shadow
-DOM boundaries, in that it traverses into shadow roots and continues
-searching within them for the given selector.
+### `querySelector`
 
-#### Usage
+This provides a way to query the DOM for a single element while
+ignoring shadow DOM boundaries.
 
 ```ts
-// find all elements with the class, "foo"
-querySelector('.foo');
+import {querySelector} from 'shadow-dom-utils';
 
-// find all elements with the class "foo" within a specific node
-querySelector('.foo', node);
+// Finds a `p` tag in the document, or any shadow roots
+querySelector('p');
 
-// pass an options object
-querySelector('.foo', node, options);
+// Finds a `p` tag in a specific node and any shadow roots
+// underneath it.
+querySelector('p', node);
+
+// Specify options
+querySelector('p', node, options);
 ```
 
-#### Options
+### Cross-boundary selectors
 
-Both of these functions can take an options object like so:
+You can match across shadow DOM boundaries by setting the
+`crossBoundary` option to true:
 
 ```ts
-querySelector('.foo', document, options);
+querySelector('div p', document, {crossBoundary: true});
 ```
 
-The following options are supported:
+This will match any `p` tag which exists below a `div`, regardless
+of if that `div` is in the same shadow root or not (but must
+still be a parent in the hierarchy).
+
+### `querySelectorAll`
+
+This provides a way to query the DOM for all elements matching
+a selector, ignoring shadow DOM boundaries.
 
 ```ts
-{
-  // If true, enables cross-boundary selector support.
-  // For example, `.foo .bar` would match even if `.foo` and `.bar` are
-  // in different shadow roots (but still descendant-like).
-  "crossBoundary": false
-}
+import {querySelectorAll} from 'shadow-dom-utils';
+
+// Finds all `p` tags in the document, or any shadow roots
+querySelectorAll('p');
+
+// Finds all `p` tags in a specific node and any shadow roots
+// underneath it.
+querySelectorAll('p', node);
+
+// Specify options
+querySelector('p', node, options);
+```
+
+### Cross-boundary selectors
+
+You can match across shadow DOM boundaries by setting the
+`crossBoundary` option to true:
+
+```ts
+querySelectorAll('div p', document, {crossBoundary: true});
+```
+
+This will match all `p` tags which exist below a `div`, regardless
+of if that `div` is in the same shadow root or not (but must
+still be a parent in the hierarchy).
+
+### `elementFromPoint`
+
+Behaves the same way as [elementFromPoint](https://developer.mozilla.org/en-US/docs/Web/API/DocumentOrShadowRoot/elementFromPoint) but
+ignores shadow boundaries to find the deepest element at the
+given coordinates.
+
+```ts
+import {elementFromPoint} from 'shadow-dom-utils';
+
+// Get the element at [10, 20]
+elementFromPoint(10, 20);
 ```
 
 ### `getHost`
 
-Retrieves the host document or element of a given node.
+Retrieves the host element of a given node, whether it be
+a shadow root host or a document.
 
-This behaves similar to calling `getRootNode()` manually, but will only
-return a result if it is a document or a shadow-root host, meaning
-disconnected nodes will return `null`.
+An element in a shadow root will have another element as its
+host, the element which the shadow root belongs to.
 
-#### Usage
+An element in the document will have the document as its host.
 
 ```ts
-// get the host of a given node
+import {getHost} from 'shadow-dom-utils';
+
+// Get the host element or document
 getHost(node);
+```
+
+### Limitations of cross-boundary selectors
+
+To give an understanding of the limitations of the `crossBoundary`
+option, see these examples:
+
+```css
+/*
+ * Will NOT match cross-boundary, foo and bar must be in the same
+ * root as otherwise they would not be a direct parent-child.
+ */
+foo > bar
+
+/*
+ * Will match cross-boundary, as foo and bar do not necessarily
+ * have to be a direct parent-child.
+ */
+foo bar
+
+/*
+ * Will match each selector cross-boundary
+ */
+a b, c d
 ```
