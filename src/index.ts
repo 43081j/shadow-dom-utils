@@ -354,3 +354,23 @@ export function querySelectorAll(
 
   return results;
 }
+
+/**
+ * Finds the element at a given point on the page, taking
+ * shadow roots into account.
+ *
+ * @param x x-coordinate of the point
+ * @param y y-coordinate of the point
+ * @return Element found
+ */
+export function elementFromPoint(x: number, y: number): Element | null {
+  let node = document.elementFromPoint(x, y);
+  let child = node?.shadowRoot?.elementFromPoint(x, y);
+
+  while (child && child !== node) {
+    node = child;
+    child = node?.shadowRoot?.elementFromPoint(x, y);
+  }
+
+  return child ?? node;
+}
