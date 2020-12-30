@@ -1,37 +1,95 @@
 import {expect} from 'chai';
 import * as util from '../index';
 
-customElements.define('level-one', class extends HTMLElement {
-  public constructor() {
-    super();
-    this.attachShadow({mode: 'open'});
+declare global {
+  interface CSSStyleSheet {
+    replaceSync(str: string): void;
   }
 
-  public connectedCallback(): void {
-    const child0 = document.createElement('level-two');
-    const child1 = document.createElement('p');
-    child1.className = 'level-one-p';
-    child1.innerText = 'I am level 1';
-    this.shadowRoot!.appendChild(child0);
-    this.shadowRoot!.appendChild(child1);
+  interface ShadowRoot {
+    adoptedStyleSheets: CSSStyleSheet[];
   }
-});
+}
 
-customElements.define('level-two', class extends HTMLElement {
-  public constructor() {
-    super();
-    this.attachShadow({mode: 'open'});
-  }
+const blockSheet = new CSSStyleSheet();
+blockSheet.replaceSync(':host { display: block; }');
 
-  public connectedCallback(): void {
-    const child0 = document.createElement('p');
-    child0.className = 'level-two-p';
-    child0.innerText = 'I am level 2';
-    this.shadowRoot!.appendChild(child0);
+customElements.define(
+  'level-one',
+  class extends HTMLElement {
+    public constructor() {
+      super();
+      const shadow = this.attachShadow({mode: 'open'});
+      shadow.adoptedStyleSheets = [blockSheet];
+    }
+
+    public connectedCallback(): void {
+      const child0 = document.createElement('level-two');
+      const child1 = document.createElement('p');
+      child1.className = 'level-one-p';
+      child1.innerText = 'I am level 1';
+      this.shadowRoot!.appendChild(child0);
+      this.shadowRoot!.appendChild(child1);
+    }
   }
-});
+);
+
+customElements.define(
+  'level-two',
+  class extends HTMLElement {
+    public constructor() {
+      super();
+      const shadow = this.attachShadow({mode: 'open'});
+      shadow.adoptedStyleSheets = [blockSheet];
+    }
+
+    public connectedCallback(): void {
+      const child0 = document.createElement('p');
+      child0.className = 'level-two-p';
+      child0.innerText = 'I am level 2';
+      this.shadowRoot!.appendChild(child0);
+    }
+  }
+);
 
 describe('shadow-utils', () => {
+  describe('elementFromPoint', () => {
+    let node: HTMLElement;
+
+    beforeEach(() => {
+      node = document.createElement('level-one');
+      document.body.appendChild(node);
+    });
+
+    afterEach(() => {
+      node.remove();
+    });
+
+    it('should find correct shadow DOM children', () => {
+      const box = node.getBoundingClientRect();
+      const p1 = node
+        .shadowRoot!.querySelector<HTMLElement>('level-two')!
+        .shadowRoot!.querySelector('p')!;
+      const p2 = node.shadowRoot!.querySelector('p')!;
+      expect(util.elementFromPoint(15, box.y + box.height * 0.25)).to.equal(p1);
+      expect(util.elementFromPoint(15, box.y + box.height * 0.75)).to.equal(p2);
+    });
+
+    it('should find light DOM children', () => {
+      const div = document.createElement('div');
+      div.style.width = '100px';
+      div.style.height = '100px';
+
+      try {
+        document.body.appendChild(div);
+        const box = div.getBoundingClientRect();
+        expect(util.elementFromPoint(box.x + 5, box.y + 5)).to.equal(div);
+      } finally {
+        div.remove();
+      }
+    });
+  });
+
   describe('isElement', () => {
     it('should be true when node is an element', () => {
       const node = document.createElement('div');
@@ -124,8 +182,9 @@ describe('shadow-utils', () => {
     });
 
     it('should match cross-boundary selectors when enabled', async () => {
-      const result = await util.querySelector('level-one level-two', document,
-          {crossBoundary: true});
+      const result = await util.querySelector('level-one level-two', document, {
+        crossBoundary: true
+      });
       const child = node.shadowRoot!.querySelector('level-two');
       expect(result).to.equal(child);
     });
