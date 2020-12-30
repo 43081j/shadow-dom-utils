@@ -129,3 +129,6 @@ foo bar
  */
 a b, c d
 ```
+
+Essentially, the only time a selector is permitted to cross shadow boundaries
+is when it is a descendent selector (`foo bar`, separated by a space).
