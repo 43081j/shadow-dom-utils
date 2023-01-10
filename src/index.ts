@@ -93,6 +93,7 @@ export async function computeCrossBoundarySelectors(
  *
  * @param node Node to traverse from
  * @param deep Whether to traverse recursively into shadow roots or not
+ * @yields Discovered shadow root
  */
 function* getShadowRoots(
   node: Node,
