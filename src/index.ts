@@ -1,5 +1,3 @@
-import parser = require('postcss-selector-parser');
-
 /**
  * Determines if a given node is an element or not.
  *
@@ -40,43 +38,6 @@ export function getHost(node: Node): Document | Element | null {
   }
 
   return null;
-}
-
-/**
- * Computes a set of cross-boundary selector representations for
- * a given selector.
- *
- * @param sel Selector to parse
- * @return representation of descendant selectors for cross-boundary
- * processing.
- */
-export async function computeCrossBoundarySelectors(
-  sel: string
-): Promise<Array<string[]>> {
-  const results: Array<string[]> = [];
-  const processor = parser();
-  const parsedSelectors = processor.astSync(sel);
-
-  for (const node of parsedSelectors.nodes) {
-    let accum = '';
-    const nodeResults: string[] = [];
-
-    if (node.type === 'selector') {
-      for (const child of node.nodes) {
-        if (child.type === 'combinator' && child.value === ' ') {
-          nodeResults.push(accum);
-          accum = '';
-        } else {
-          accum += child.toString();
-        }
-      }
-
-      nodeResults.push(accum);
-      results.push(nodeResults);
-    }
-  }
-
-  return results;
 }
 
 /*
@@ -148,67 +109,34 @@ function* getShadowRoots(
 }
 
 /**
- * Returns the host element of this node
+ * Attempts to find an element across shadow boundaries
+ * by the given selector.
  *
- * @param node Node to retrieve host for
- * @return host element
+ * @param selector Selector to query for
+ * @param [subject] Subject to query relative to
+ * @return element found
  */
-function getParentHost(node: Node): Element | null {
-  const root = node.getRootNode();
-  const rootAsShadow = root as ShadowRoot;
-  if (root.nodeType === Node.DOCUMENT_FRAGMENT_NODE && rootAsShadow.host) {
-    return rootAsShadow.host;
+function queryCrossBoundary<E extends Element>(
+  selector: string,
+  subject: Node & ParentNode = document
+): E | null {
+  const immediate = subject.querySelector<E>(selector);
+
+  if (immediate) {
+    return immediate;
   }
-  return null;
-}
 
-/**
- * Asserts that the parents of the given node satisfy the chain of
- * selectors.
- *
- * @param node Node to test
- * @param chain Selectors to assert for
- * @return whether the parents satisfied the chain or not
- */
-function parentsSatisfyChain(node: Element, chain: string[]): boolean {
-  let selector;
-  let currentNode = node;
+  const shadowRoots = [...getShadowRoots(subject, true)];
 
-  while ((selector = chain.pop())) {
-    const immediate = currentNode.closest(selector);
+  for (const root of shadowRoots) {
+    const child = root.querySelector<E>(selector);
 
-    if (immediate) {
-      currentNode = immediate;
-    } else {
-      let parentHost;
-      let nextNode;
-      let currentHostChild = currentNode;
-
-      while ((parentHost = getParentHost(currentHostChild))) {
-        if (parentHost.matches(selector)) {
-          nextNode = parentHost;
-          break;
-        }
-
-        const child = parentHost.closest(selector);
-
-        if (child) {
-          nextNode = child;
-          break;
-        }
-
-        currentHostChild = parentHost;
-      }
-
-      if (nextNode) {
-        currentNode = nextNode;
-      } else {
-        return false;
-      }
+    if (child) {
+      return child;
     }
   }
 
-  return true;
+  return null;
 }
 
 /**
@@ -217,63 +145,45 @@ function parentsSatisfyChain(node: Element, chain: string[]): boolean {
  *
  * @param selector Selector to query for
  * @param [subject] Subject to query relative to
- * @return element found
+ * @return elements found
  */
-async function queryCrossBoundary<E extends Element>(
+function queryAllCrossBoundary<E extends Element>(
   selector: string,
   subject: Node & ParentNode = document
-): Promise<E | null> {
-  const computed = await computeCrossBoundarySelectors(selector);
-  const immediateChild = subject.querySelector<E>(selector);
-
-  if (immediateChild) {
-    return immediateChild;
-  }
-
+): E[] {
+  const results: E[] = [...subject.querySelectorAll<E>(selector)];
   const shadowRoots = [...getShadowRoots(subject, true)];
 
-  for (const chain of computed) {
-    const deepestPart = chain[chain.length - 1];
+  for (const root of shadowRoots) {
+    const children = root.querySelectorAll<E>(selector);
 
-    for (const root of shadowRoots) {
-      const children = root.querySelectorAll<E>(deepestPart);
-
-      for (const child of children) {
-        if (chain.length === 1) {
-          return child;
-        }
-
-        if (parentsSatisfyChain(child, chain.slice(0, -1))) {
-          return child;
-        }
-      }
+    for (const child of children) {
+      results.push(child);
     }
   }
 
-  return null;
+  return results;
 }
 
-export interface QuerySelectorOptions {
-  crossBoundary: boolean;
-}
+export interface QuerySelectorOptions {}
 
 export function querySelector<K extends keyof HTMLElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
-): Promise<HTMLElementTagNameMap[K] | null>;
+): HTMLElementTagNameMap[K] | null;
 
 export function querySelector<K extends keyof SVGElementTagNameMap>(
   selectors: K,
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
-): Promise<SVGElementTagNameMap[K] | null>;
+): SVGElementTagNameMap[K] | null;
 
 export function querySelector<E extends Element = Element>(
-  selectors: string,
+  selectors: string | string[],
   subject?: Node & ParentNode,
   options?: Partial<QuerySelectorOptions>
-): Promise<E | null>;
+): E | null;
 
 /**
  * Queries the DOM for a matching element from a given node, traversing
@@ -284,35 +194,40 @@ export function querySelector<E extends Element = Element>(
  * @param [options] Options for fine-tuning querying
  * @return First matching element found
  */
-export async function querySelector(
-  selectors: string,
+export function querySelector(
+  selectors: string | string[],
   subject: Node & ParentNode = document,
-  options?: Partial<QuerySelectorOptions>
-): Promise<Element | null> {
-  const immediateChild = subject.querySelector(selectors);
+  _options?: Partial<QuerySelectorOptions>
+): Element | null {
+  const selectorList = Array.isArray(selectors) ? selectors : [selectors];
 
-  if (immediateChild) {
-    return immediateChild;
-  }
-
-  if (options?.crossBoundary) {
-    const child = await queryCrossBoundary(selectors);
-
-    if (child) {
-      return child;
-    }
-
+  if (selectorList.length === 0) {
     return null;
   }
 
-  for (const root of getShadowRoots(subject, true)) {
-    const child = root.querySelector(selectors);
-    if (child) {
-      return child;
+  let currentSubjects = [subject];
+  let result: Element | null = null;
+
+  for (const selector of selectorList) {
+    const newSubjects: Array<Node & ParentNode> = [];
+
+    for (const currentSubject of currentSubjects) {
+      const child = queryCrossBoundary(selector, currentSubject);
+
+      if (child) {
+        result = child;
+        newSubjects.push(child);
+      }
     }
+
+    if (newSubjects.length === 0) {
+      return null;
+    }
+
+    currentSubjects = newSubjects;
   }
 
-  return null;
+  return result;
 }
 
 export function querySelectorAll<K extends keyof HTMLElementTagNameMap>(
@@ -328,9 +243,9 @@ export function querySelectorAll<K extends keyof SVGElementTagNameMap>(
 ): Array<SVGElementTagNameMap[K]>;
 
 export function querySelectorAll<E extends Element = Element>(
-  selectors: string,
-  subject: Node & ParentNode,
-  _options?: Partial<QuerySelectorOptions>
+  selectors: string | string[],
+  subject?: Node & ParentNode,
+  options?: Partial<QuerySelectorOptions>
 ): E[];
 
 /**
@@ -343,14 +258,36 @@ export function querySelectorAll<E extends Element = Element>(
  * @return Set of matching elements found
  */
 export function querySelectorAll(
-  selectors: string,
+  selectors: string | string[],
   subject: Node & ParentNode = document,
   _options?: Partial<QuerySelectorOptions>
 ): Element[] {
-  const results: Element[] = [...subject.querySelectorAll(selectors)];
+  const selectorList = Array.isArray(selectors) ? selectors : [selectors];
 
-  for (const root of getShadowRoots(subject)) {
-    results.push(...root.querySelectorAll(selectors));
+  if (selectorList.length === 0) {
+    return [];
+  }
+
+  let currentSubjects = [subject];
+  let results: Element[] = [];
+
+  for (const selector of selectorList) {
+    const newSubjects: Element[] = [];
+
+    for (const currentSubject of currentSubjects) {
+      const children = queryAllCrossBoundary(selector, currentSubject);
+
+      for (const child of children) {
+        newSubjects.push(child);
+      }
+    }
+
+    if (newSubjects.length === 0) {
+      return [];
+    }
+
+    currentSubjects = newSubjects;
+    results = newSubjects;
   }
 
   return results;

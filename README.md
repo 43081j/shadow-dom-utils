@@ -33,11 +33,10 @@ querySelector('p', node, options);
 
 ### Cross-boundary selectors
 
-You can match across shadow DOM boundaries by setting the
-`crossBoundary` option to true:
+You can match across shadow DOM boundaries by passing an array of selectors:
 
 ```ts
-querySelector('div p', document, {crossBoundary: true});
+querySelector(['div', 'p'], document);
 ```
 
 This will match any `p` tag which exists below a `div`, regardless
@@ -65,11 +64,10 @@ querySelector('p', node, options);
 
 ### Cross-boundary selectors
 
-You can match across shadow DOM boundaries by setting the
-`crossBoundary` option to true:
+You can match across shadow DOM boundaries by passing an array of selectors:
 
 ```ts
-querySelectorAll('div p', document, {crossBoundary: true});
+querySelectorAll(['div', 'p'], document);
 ```
 
 This will match all `p` tags which exist below a `div`, regardless

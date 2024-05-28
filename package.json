@@ -1,28 +1,28 @@
 {
   "name": "shadow-dom-utils",
   "version": "0.6.0",
+  "type": "module",
   "description": "A set of utilities for dealing with shadow DOM.",
-  "main": "./lib/index.js",
-  "module": "./dist/index.js",
-  "exports": {
-    "import": "./dist/index.js",
-    "default": "./lib/index.js"
-  },
   "files": [
-    "lib/!(test)",
-    "dist/!(test.js)"
+    "dist"
   ],
   "scripts": {
-    "clean": "rimraf ./lib ./dist",
-    "lint": "eslint \"src/**/*.ts\"",
-    "prebuild": "npm run clean",
-    "build:esm": "esbuild --bundle --outfile=dist/index.js --format=esm src/index.ts",
-    "build:test": "esbuild --bundle --outfile=dist/test.js --format=esm src/test/index.ts",
-    "build": "tsc && npm run build:esm",
-    "test": "npm run build:test && karma start --single-run",
+    "prepare": "tshy",
+    "clean": "rimraf ./lib ./coverage",
+    "lint": "eslint src",
+    "build": "tsc --noEmit",
+    "test": "web-test-runner",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run lint && npm run test"
+  },
+  "tshy": {
+    "exclude": [
+      "src/test"
+    ],
+    "exports": {
+      ".": "./src/index.ts",
+      "./package.json": "./package.json"
+    }
   },
   "repository": {
     "type": "git",
@@ -35,25 +35,35 @@
   },
   "homepage": "https://github.com/43081j/shadow-dom-utils#readme",
   "devDependencies": {
-    "@types/chai": "^4.3.4",
-    "@types/mocha": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.48.1",
-    "@typescript-eslint/parser": "^5.48.1",
-    "chai": "^4.3.7",
-    "esbuild": "^0.16.16",
-    "eslint": "^8.31.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-plugin-jsdoc": "^39.6.4",
-    "karma": "^6.4.1",
-    "karma-chrome-launcher": "^3.1.1",
-    "karma-mocha": "^2.0.1",
-    "mocha": "^10.2.0",
-    "prettier": "^2.8.2",
-    "puppeteer": "^19.5.0",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.9.4"
+    "@eslint/js": "^9.3.0",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.6",
+    "@web/dev-server-esbuild": "^1.0.2",
+    "@web/test-runner": "^0.18.2",
+    "@web/test-runner-puppeteer": "^0.16.0",
+    "chai": "^5.1.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-jsdoc": "^48.2.6",
+    "mocha": "^10.4.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.7",
+    "tshy": "^1.14.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.11.0"
   },
-  "dependencies": {
-    "postcss-selector-parser": "^6.0.11"
-  }
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/index.d.ts",
+        "default": "./dist/commonjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/commonjs/index.js",
+  "types": "./dist/commonjs/index.d.ts"
 }
