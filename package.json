@@ -1,6 +1,6 @@
 {
   "name": "shadow-dom-utils",
-  "version": "0.6.0",
+  "version": "0.0.0-dev",
   "type": "module",
   "description": "A set of utilities for dealing with shadow DOM.",
   "files": [

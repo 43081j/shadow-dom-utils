@@ -29,6 +29,9 @@ querySelector('p', node);
 
 // Specify options
 querySelector('p', node, options);
+
+// Finds a `p` tag under a `div` _in the same root_ but at any depth
+querySelector('div p');
 ```
 
 ### Cross-boundary selectors
@@ -42,6 +45,10 @@ querySelector(['div', 'p'], document);
 This will match any `p` tag which exists below a `div`, regardless
 of if that `div` is in the same shadow root or not (but must
 still be a parent in the hierarchy).
+
+If you try to do this in one selector (i.e. `querySelector('div p')`), you
+will instead be querying all `p` tags which are a child of a `div` tag
+_in the same root_ (but that root could be anywhere at any depth).
 
 ### `querySelectorAll`
 
