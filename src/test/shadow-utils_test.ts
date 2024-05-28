@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import * as util from '../index';
+import * as util from '../index.js';
 
 declare global {
   interface CSSStyleSheet {
@@ -112,47 +112,6 @@ describe('shadow-utils', () => {
     });
   });
 
-  describe('computeCrossBoundarySelectors', () => {
-    const testCases: Record<string, Array<string[]>> = {
-      '*': [['*']],
-      'div span': [['div', 'span']],
-      'div:not([hidden]) span': [['div:not([hidden])', 'span']],
-      'div:not(:hover, :focus) span': [['div:not(:hover, :focus)', 'span']],
-      'div:is([hidden]) span': [['div:is([hidden])', 'span']],
-      'div:is(:hover, :focus) span': [['div:is(:hover, :focus)', 'span']],
-      'div, span': [['div'], [' span']],
-      'div.foo': [['div.foo']],
-      'div.foo bar': [['div.foo', 'bar']],
-      'div#foo': [['div#foo']],
-      'div#foo bar': [['div#foo', 'bar']],
-      'div[hidden]': [['div[hidden]']],
-      'div[hidden] bar': [['div[hidden]', 'bar']],
-      'div[attr="foo"] bar': [['div[attr="foo"]', 'bar']],
-      'div[attr="foo" i]': [['div[attr="foo" i]']],
-      'div[attr="foo" s]': [['div[attr="foo" s]']],
-      'div[attr~="foo"]': [['div[attr~="foo"]']],
-      'div[attr^="foo"]': [['div[attr^="foo"]']],
-      'div[attr$="foo"]': [['div[attr$="foo"]']],
-      'div[attr*="foo"]': [['div[attr*="foo"]']],
-      'div[attr|="foo"]': [['div[attr|="foo"]']],
-      'div:nth-child(1) span': [['div:nth-child(1)', 'span']],
-      'foo > bar baz': [['foo > bar', 'baz']],
-      'foo + bar baz': [['foo + bar', 'baz']],
-      'foo ~ bar baz': [['foo ~ bar', 'baz']],
-      'foo bar > baz': [['foo', 'bar > baz']],
-      'lotsa         whitespace': [['lotsa', 'whitespace']],
-      'foo, bar, baz': [['foo'], [' bar'], [' baz']]
-    };
-
-    for (const [selector, expected] of Object.entries(testCases)) {
-      it(`should compute chain for ${selector}`, async () => {
-        const result = await util.computeCrossBoundarySelectors(selector);
-
-        expect(result).to.deep.equal(expected);
-      });
-    }
-  });
-
   describe('querySelector', () => {
     let node: HTMLElement;
 
@@ -165,28 +124,101 @@ describe('shadow-utils', () => {
       node.remove();
     });
 
-    it('should find same-root nodes', async () => {
-      const result = await util.querySelector('level-one');
+    it('should find same-root nodes', () => {
+      const result = util.querySelector('level-one');
       expect(result).to.equal(node);
     });
 
-    it('should find nodes across shadow boundaries', async () => {
-      const result = await util.querySelector('level-two');
+    it('should find nodes across shadow boundaries', () => {
+      const result = util.querySelector('level-two');
       const child = node.shadowRoot!.querySelector('level-two');
       expect(result).to.equal(child);
     });
 
-    it('should not match cross-boundary selectors by default', async () => {
-      const result = await util.querySelector('level-one level-two');
+    it('should not cross-boundary in single selector', () => {
+      const result = util.querySelector('level-one level-two');
       expect(result).to.equal(null);
     });
 
-    it('should match cross-boundary selectors when enabled', async () => {
-      const result = await util.querySelector('level-one level-two', document, {
-        crossBoundary: true
-      });
+    it('should cross-boundary in multiple selectors', () => {
+      const result = util.querySelector(['level-one', 'level-two'], document);
       const child = node.shadowRoot!.querySelector('level-two');
       expect(result).to.equal(child);
+    });
+
+    it('should return null if empty set', () => {
+      const result = util.querySelector([]);
+      expect(result).to.equal(null);
+    });
+  });
+
+  describe('querySelectorAll', () => {
+    let node: HTMLElement;
+
+    beforeEach(() => {
+      node = document.createElement('level-one');
+      document.body.appendChild(node);
+    });
+
+    afterEach(() => {
+      node.remove();
+    });
+
+    it('should find same-root nodes', () => {
+      const result = util.querySelectorAll('level-one');
+      expect(result).to.deep.equal([node]);
+    });
+
+    it('should find nodes across shadow boundaries', () => {
+      const result = util.querySelectorAll('level-two');
+      const child = node.shadowRoot!.querySelector('level-two');
+      expect(result).to.deep.equal([child]);
+    });
+
+    it('should not cross-boundary in single selector', () => {
+      const result = util.querySelectorAll('level-one level-two');
+      expect(result).to.deep.equal([]);
+    });
+
+    it('should cross-boundary in multiple selectors', () => {
+      const result = util.querySelectorAll(
+        ['level-one', 'level-two'],
+        document
+      );
+      const child = node.shadowRoot!.querySelector('level-two');
+      expect(result).to.deep.equal([child]);
+    });
+
+    it('should return empty set if no selectors', () => {
+      const result = util.querySelectorAll([]);
+      expect(result).to.deep.equal([]);
+    });
+  });
+
+  describe('getHost', () => {
+    let node: HTMLElement;
+
+    beforeEach(() => {
+      node = document.createElement('level-one');
+      document.body.appendChild(node);
+    });
+
+    afterEach(() => {
+      node.remove();
+    });
+
+    it('should return null for detached node', () => {
+      const detachedNode = document.createElement('div');
+      expect(util.getHost(detachedNode)).to.equal(null);
+    });
+
+    it('should return document for non-shadow contained nodes', () => {
+      expect(util.getHost(node)).to.equal(document);
+    });
+
+    it('should return host for shadow contained node', () => {
+      const child = node.shadowRoot!.querySelector('level-two')!;
+      expect(util.getHost(child)).to.equal(node);
     });
   });
 });

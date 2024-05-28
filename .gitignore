@@ -1,4 +1,6 @@
 *.swp
-/node_modules/
-/lib/
-/dist/
+/node_modules
+/lib
+/dist
+/coverage
+/.tshy
