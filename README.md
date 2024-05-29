@@ -34,9 +34,10 @@ querySelector('p', node, options);
 querySelector('div p');
 ```
 
-### Cross-boundary selectors
+### Querying children across boundaries
 
-You can match across shadow DOM boundaries by passing an array of selectors:
+If you want to match children of a particular node _at any depth_ (i.e. across
+shadow boundaries), you can pass an array of selectors:
 
 ```ts
 querySelector(['div', 'p'], document);
@@ -69,9 +70,10 @@ querySelectorAll('p', node);
 querySelector('p', node, options);
 ```
 
-### Cross-boundary selectors
+### Querying children across boundaries
 
-You can match across shadow DOM boundaries by passing an array of selectors:
+If you want to match children of a particular node _at any depth_ (i.e. across
+shadow boundaries), you can pass an array of selectors:
 
 ```ts
 querySelectorAll(['div', 'p'], document);
