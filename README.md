@@ -112,30 +112,3 @@ import {getHost} from 'shadow-dom-utils';
 // Get the host element or document
 getHost(node);
 ```
-
-### Limitations of cross-boundary selectors
-
-To give an understanding of the limitations of the `crossBoundary`
-option, see these examples:
-
-```css
-/*
- * Will NOT match cross-boundary, foo and bar must be in the same
- * root as otherwise they would not be a direct parent-child.
- */
-foo > bar
-
-/*
- * Will match cross-boundary, as foo and bar do not necessarily
- * have to be a direct parent-child.
- */
-foo bar
-
-/*
- * Will match each selector cross-boundary
- */
-a b, c d
-```
-
-Essentially, the only time a selector is permitted to cross shadow boundaries
-is when it is a descendent selector (`foo bar`, separated by a space).
