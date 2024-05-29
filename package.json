@@ -8,12 +8,12 @@
   ],
   "scripts": {
     "prepare": "tshy",
-    "clean": "rimraf ./lib ./coverage",
+    "build:clean": "rimraf ./dist",
+    "test:clean": "rimraf ./coverage",
     "lint": "eslint src",
-    "build": "tsc --noEmit",
-    "test": "web-test-runner",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "npm run lint && npm run test"
+    "build": "npm run build:clean && tsc --noEmit",
+    "test": "npm run test:clean && web-test-runner",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "tshy": {
     "exclude": [
