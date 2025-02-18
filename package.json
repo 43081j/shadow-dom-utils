@@ -42,14 +42,14 @@
     "@web/test-runner": "^0.18.2",
     "@web/test-runner-puppeteer": "^0.16.0",
     "chai": "^5.1.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-jsdoc": "^48.2.6",
+    "eslint": "^9.20.1",
+    "eslint-plugin-jsdoc": "^50.6.3",
     "mocha": "^10.4.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.7",
     "tshy": "^1.14.0",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.11.0"
+    "typescript-eslint": "^8.24.1"
   },
   "exports": {
     ".": {
