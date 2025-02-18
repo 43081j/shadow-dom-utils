@@ -165,6 +165,7 @@ function queryAllCrossBoundary<E extends Element>(
   return results;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface QuerySelectorOptions {}
 
 export function querySelector<K extends keyof HTMLElementTagNameMap>(
