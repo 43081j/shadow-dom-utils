@@ -46,8 +46,8 @@
     "eslint-plugin-jsdoc": "^50.6.3",
     "mocha": "^11.1.0",
     "prettier": "^3.2.5",
-    "rimraf": "^5.0.7",
-    "tshy": "^1.14.0",
+    "rimraf": "^6.0.1",
+    "tshy": "^3.0.2",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.24.1"
   },
@@ -65,5 +65,6 @@
     "./package.json": "./package.json"
   },
   "main": "./dist/commonjs/index.js",
-  "types": "./dist/commonjs/index.d.ts"
+  "types": "./dist/commonjs/index.d.ts",
+  "module": "./dist/esm/index.js"
 }
